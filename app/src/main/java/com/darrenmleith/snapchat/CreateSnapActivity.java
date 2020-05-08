@@ -8,18 +8,31 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+
+import java.io.ByteArrayOutputStream;
+import java.util.UUID;
 
 public class CreateSnapActivity extends AppCompatActivity {
 
     ImageView _createSnapImageView;
     TextView _messageEditText;
+    String _imageName = UUID.randomUUID().toString() + ".jpg";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,5 +85,26 @@ public class CreateSnapActivity extends AppCompatActivity {
 
     public void nextClicked(View view) {
 
+        // Get the data from an ImageView as bytes
+        _createSnapImageView.setDrawingCacheEnabled(true);
+        _createSnapImageView.buildDrawingCache();
+        Bitmap bitmap = ((BitmapDrawable) _createSnapImageView.getDrawable()).getBitmap();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        byte[] data = baos.toByteArray();
+
+        UploadTask uploadTask = FirebaseStorage.getInstance().getReference().child("images").child(_imageName).putBytes(data);
+        uploadTask.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                // Handle unsuccessful uploads
+                Toast.makeText(CreateSnapActivity.this, "Upload failed", Toast.LENGTH_SHORT).show();
+            }
+        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                Log.i("download URL", taskSnapshot.toString());
+            }
+        });
     }
 }
