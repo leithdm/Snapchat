@@ -3,6 +3,7 @@ package com.darrenmleith.snapchat;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -27,7 +28,8 @@ public class SnapsActivity extends AppCompatActivity {
         super.onOptionsItemSelected(item);
         switch (item.getItemId()) {
             case R.id.createSnap:
-                Log.i("Item selected", "Create Snap");
+                Intent intent = new Intent(this, CreateSnapActivity.class);
+                startActivity(intent);
                 return true;
 
             case R.id.logout:
