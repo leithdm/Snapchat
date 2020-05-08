@@ -104,6 +104,8 @@ public class CreateSnapActivity extends AppCompatActivity {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 Log.i("download URL", taskSnapshot.toString());
+                Intent intent = new Intent(CreateSnapActivity.this, ChooseUserActivity.class);
+                startActivity(intent);
             }
         });
     }
