@@ -1,6 +1,7 @@
 package com.darrenmleith.snapchat;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
@@ -9,12 +10,22 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
+
+import java.util.ArrayList;
 
 public class SnapsActivity extends AppCompatActivity {
-
     private FirebaseAuth _mAuth;
+
+    private ListView _snapsListView;
+    private ArrayList<String> _emails;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -23,7 +34,6 @@ public class SnapsActivity extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
-    @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         super.onOptionsItemSelected(item);
         switch (item.getItemId()) {
@@ -51,7 +61,38 @@ public class SnapsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_snaps);
+        _emails = new ArrayList<>();
         _mAuth = FirebaseAuth.getInstance();
+        _snapsListView = findViewById(R.id.snapsListView);
+        final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, _emails);
+        _snapsListView.setAdapter(arrayAdapter);
+
+        //need to access logged in users snaps directory. Again, we do this by using the addChildEventListener.
+        //once access it, we add the "from" component to the _emails array list and populate the ListView
+        FirebaseDatabase.getInstance().getReference().child("users").child(_mAuth.getCurrentUser().getUid()).child("snaps").addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                _emails.add(dataSnapshot.child("from").getValue().toString());
+                arrayAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+            }
+        });
 
     }
+
 }

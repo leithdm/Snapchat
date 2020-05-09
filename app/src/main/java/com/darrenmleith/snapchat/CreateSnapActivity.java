@@ -94,7 +94,7 @@ public class CreateSnapActivity extends AppCompatActivity {
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
         byte[] data = baos.toByteArray();
 
-        //uploading image to FirebaseStorage images directory
+        //uploading image to a FirebaseStorage >images directory along with a random UUID for the imageName
         UploadTask uploadTask = FirebaseStorage.getInstance().getReference().child("images").child(_imageName).putBytes(data);
         uploadTask.addOnFailureListener(new OnFailureListener() {
             @Override
