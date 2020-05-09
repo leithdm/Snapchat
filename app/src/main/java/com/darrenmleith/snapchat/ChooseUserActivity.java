@@ -11,6 +11,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -37,27 +38,15 @@ public class ChooseUserActivity extends AppCompatActivity {
         final ArrayAdapter arrayAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, _emails);
         _chooseUserListView.setAdapter(arrayAdapter);
 
-        _chooseUserListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Map<String, String> snapMap = new HashMap<>();
-                snapMap.put("from", "");
-                snapMap.put("imageName", "");
-                snapMap.put("imageURL", "");
-                snapMap.put("message", "");
-                FirebaseDatabase.getInstance().getReference().child("users").child(_keys.get(position)).child("snaps").push().setValue(snapMap); //push() puts a random UID
-                Intent intent = new Intent(getApplicationContext(), SnapsActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); //wipe everything out of the back button history
-                startActivity(intent);
-            }
-        });
 
+        //This is how we populate the ListView with all the users. This is NOT like a SQL SELECT * USERS statement.
+        //We use the .addChildEventListener method and add each users UID to a local _keys array and their email to an _emails array
         FirebaseDatabase.getInstance().getReference().child("users").addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-            _emails.add((String) dataSnapshot.child("email").getValue());
-            _keys.add(dataSnapshot.getKey());
-            arrayAdapter.notifyDataSetChanged();
+                _keys.add(dataSnapshot.getKey());
+                _emails.add((String) dataSnapshot.child("email").getValue());
+                arrayAdapter.notifyDataSetChanged();
             }
 
             @Override
@@ -72,7 +61,25 @@ public class ChooseUserActivity extends AppCompatActivity {
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) { }
         });
+
+
+
+        _chooseUserListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Map<String, String> snapMap = new HashMap<>();
+                snapMap.put("from", FirebaseAuth.getInstance().getCurrentUser().getEmail());
+                snapMap.put("imageName", getIntent().getStringExtra("imageName"));
+                snapMap.put("imageURL", getIntent().getStringExtra("imageURL"));
+                snapMap.put("message", getIntent().getStringExtra("message"));
+
+                //after selecting the user we want to post image/message to, we get that users UID from Firebase using _keys and then add a "snaps" child along with a
+                // > UID and > from,imageName,imageURL,message from the HashMap.
+                FirebaseDatabase.getInstance().getReference().child("users").child(_keys.get(position)).child("snaps").push().setValue(snapMap); //push() puts a random UID
+                Intent intent = new Intent(getApplicationContext(), SnapsActivity.class); //shoot back to the SnapsActivity where we can display all snaps for logged in user
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); //wipe everything out of the back button history
+                startActivity(intent);
+            }
+        });
     }
-
-
 }

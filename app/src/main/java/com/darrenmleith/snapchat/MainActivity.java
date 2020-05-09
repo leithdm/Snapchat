@@ -59,13 +59,13 @@ public class MainActivity extends AppCompatActivity {
                             if (task.isSuccessful()) {
                                 login();
                             } else {
-                                //sign-up the user
+                                //sign-up the user to Firebase Authentication
                                 _mAuth.createUserWithEmailAndPassword(email, password)
                                         .addOnCompleteListener(MainActivity.this, new OnCompleteListener<AuthResult>() {
                                             @Override
                                             public void onComplete(@NonNull Task<AuthResult> task) {
                                                 if (task.isSuccessful()) {
-                                                    // add to real-time database
+                                                    // add the user to Firebase real-time database to directory users > UID > email
                                                     FirebaseDatabase.getInstance().getReference().child("users").child(task.getResult().getUser().getUid()).child("email").setValue(email);
                                                     login();
                                                 } else {

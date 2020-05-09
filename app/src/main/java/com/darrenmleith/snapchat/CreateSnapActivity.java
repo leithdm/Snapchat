@@ -21,6 +21,7 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -93,19 +94,33 @@ public class CreateSnapActivity extends AppCompatActivity {
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
         byte[] data = baos.toByteArray();
 
+        //uploading image to FirebaseStorage images directory
         UploadTask uploadTask = FirebaseStorage.getInstance().getReference().child("images").child(_imageName).putBytes(data);
         uploadTask.addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception exception) {
-                // Handle unsuccessful uploads
                 Toast.makeText(CreateSnapActivity.this, "Upload failed", Toast.LENGTH_SHORT).show();
             }
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
+            //most importantly, get a ref to the imageURL so we can retrieve it later
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                Log.i("download URL", taskSnapshot.toString());
-                Intent intent = new Intent(CreateSnapActivity.this, ChooseUserActivity.class);
-                startActivity(intent);
+                if (taskSnapshot.getMetadata() != null) {
+                    if (taskSnapshot.getMetadata().getReference() != null) {
+                        Task<Uri> result = taskSnapshot.getStorage().getDownloadUrl();
+                        result.addOnSuccessListener(new OnSuccessListener<Uri>() {
+                            @Override
+                            public void onSuccess(Uri uri) {
+                                String imageUrl = uri.toString();
+                                Intent intent = new Intent(CreateSnapActivity.this, ChooseUserActivity.class);
+                                intent.putExtra("imageURL", imageUrl);
+                                intent.putExtra("imageName", _imageName);
+                                intent.putExtra("message", _messageEditText.getText().toString());
+                                startActivity(intent);
+                            }
+                        });
+                    }
+                }
             }
         });
     }
