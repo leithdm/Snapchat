@@ -87,8 +87,18 @@ public class SnapsActivity extends AppCompatActivity {
             public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
             }
 
+            //also make use of this so that when we delete from ViewSnapActivity the ListView gets updated
             @Override
             public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot snap: _snaps) {
+                    int index = 0;
+                    if (snap.getKey() == dataSnapshot.getKey()) {
+                        _emails.remove(index);
+                        _snaps.remove(index);
+                    }
+                    index++;
+                }
+                arrayAdapter.notifyDataSetChanged();
             }
 
             @Override

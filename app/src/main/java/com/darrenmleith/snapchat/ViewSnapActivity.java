@@ -9,6 +9,10 @@ import android.os.Bundle;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -17,6 +21,7 @@ public class ViewSnapActivity extends AppCompatActivity {
 
     TextView _messageTextView;
     ImageView _snapImageView;
+    private FirebaseAuth _mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,6 +31,7 @@ public class ViewSnapActivity extends AppCompatActivity {
         _messageTextView = findViewById(R.id.messageTextView);
         _snapImageView = findViewById(R.id.snapImageView);
         _messageTextView.setText(getIntent().getStringExtra("message"));
+        _mAuth = FirebaseAuth.getInstance();
 
         ImageDownloader task = new ImageDownloader();
         Bitmap myImage;
@@ -52,5 +58,15 @@ public class ViewSnapActivity extends AppCompatActivity {
                 return null;
             }
         }
+    }
+
+    //functionality to delete a snap from both Storage and from Realtime Database at the snaps>UID level when the backbutton pressed
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        //delete UID from snaps directory....love that .removeValue()
+        FirebaseDatabase.getInstance().getReference().child("users").child(_mAuth.getCurrentUser().getUid()).child("snaps").child(getIntent().getStringExtra("snapKey")).removeValue();
+        //delete from storage...love that .delete()
+        FirebaseStorage.getInstance().getReference().child("images").child(getIntent().getStringExtra("imageName")).delete();
     }
 }
