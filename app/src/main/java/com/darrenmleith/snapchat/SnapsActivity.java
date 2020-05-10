@@ -3,6 +3,7 @@ package com.darrenmleith.snapchat;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.solver.widgets.Snapshot;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -10,6 +11,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
@@ -26,6 +29,7 @@ public class SnapsActivity extends AppCompatActivity {
 
     private ListView _snapsListView;
     private ArrayList<String> _emails;
+    private ArrayList<DataSnapshot> _snaps;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -66,13 +70,16 @@ public class SnapsActivity extends AppCompatActivity {
         _snapsListView = findViewById(R.id.snapsListView);
         final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, _emails);
         _snapsListView.setAdapter(arrayAdapter);
+        _snaps = new ArrayList<>();
 
         //need to access logged in users snaps directory. Again, we do this by using the addChildEventListener.
-        //once access it, we add the "from" component to the _emails array list and populate the ListView
+        //Once we have access to it, we add the "from" component to the _emails array list and populate the ListView
+        //Ee also add the DataSnapShot to a _snaps Array so we can pass through an intent to ViewSnap activity with all relevant information
         FirebaseDatabase.getInstance().getReference().child("users").child(_mAuth.getCurrentUser().getUid()).child("snaps").addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 _emails.add(dataSnapshot.child("from").getValue().toString());
+                _snaps.add(dataSnapshot);
                 arrayAdapter.notifyDataSetChanged();
             }
 
@@ -90,6 +97,18 @@ public class SnapsActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
+            }
+        });
+
+        _snapsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                DataSnapshot snapshot = _snaps.get(position);
+                Intent intent = new Intent(SnapsActivity.this, ViewSnapActivity.class);
+                intent.putExtra("snapKey", snapshot.getKey());
+                intent.putExtra("imageName", snapshot.child("imageName").toString());
+                intent.putExtra("imageURL", snapshot.child("imageURL").toString());
+                intent.putExtra("message", snapshot.child("message").toString());
             }
         });
 
