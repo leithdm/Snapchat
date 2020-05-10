@@ -92,7 +92,7 @@ public class SnapsActivity extends AppCompatActivity {
             public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
                 for (DataSnapshot snap: _snaps) {
                     int index = 0;
-                    if (snap.getKey() == dataSnapshot.getKey()) {
+                    if (snap.getKey().equals(dataSnapshot.getKey())) {
                         _emails.remove(index);
                         _snaps.remove(index);
                     }
@@ -116,12 +116,12 @@ public class SnapsActivity extends AppCompatActivity {
                 DataSnapshot snapshot = _snaps.get(position);
                 Intent intent = new Intent(SnapsActivity.this, ViewSnapActivity.class);
                 intent.putExtra("snapKey", snapshot.getKey());
-                intent.putExtra("imageName", snapshot.child("imageName").toString());
-                intent.putExtra("imageURL", snapshot.child("imageURL").toString());
-                intent.putExtra("message", snapshot.child("message").toString());
+                Log.i("********Snapshot key is", snapshot.getKey());
+                intent.putExtra("imageName", snapshot.child("imageName").getValue().toString());
+                intent.putExtra("imageURL", snapshot.child("imageURL").getValue().toString());
+                intent.putExtra("message", snapshot.child("message").getValue().toString());
+                startActivity(intent);
             }
         });
-
     }
-
 }
